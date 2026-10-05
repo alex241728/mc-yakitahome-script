@@ -90,13 +90,26 @@ def json_to_markdown(data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def get_available_path(output_dir: Path, base_name: str) -> Path:
+    """按 base.md, base2.md, base3.md 顺位获取尚未被占用的文件路径"""
+    candidate = output_dir / f"{base_name}.md"
+    if not candidate.exists():
+        return candidate
+
+    idx = 2
+    while True:
+        candidate = output_dir / f"{base_name}{idx}.md"
+        if not candidate.exists():
+            return candidate
+        idx += 1
+
+
 def save_markdown_file(data: dict[str, Any], output_dir: Path) -> Path:
     title = clean_text(data.get("name", "story"))
-    safe_title = re.sub(r'[\\/*?:"<>|]', "_", title)
-    target_path = output_dir / f"{safe_title}.md"
+    safe_title = re.sub(r'[\\/*?:"<>|]', "_", title).strip() or "story"
 
+    target_path = get_available_path(output_dir, safe_title)
     md_content = json_to_markdown(data)
-    with open(target_path, "w", encoding="utf-8") as f:
-        f.write(md_content)
+    target_path.write_text(md_content, encoding="utf-8")
 
     return target_path

@@ -1,7 +1,6 @@
 import argparse
 import json
 import urllib
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from export_md import save_markdown_file
@@ -104,36 +103,22 @@ def main():
 
     # 多线程池并发执行
     success_count = 0
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
-        future_map = {
-            executor.submit(fetch_and_export_story, sid, output_dir): sid
-            for sid in story_ids
-        }
-
-        for idx, future in enumerate(as_completed(future_map), 1):
-            sid = future_map[future]
-            try:
-                file_name = future.result()
-                print(f"[{idx}/{total_tasks}] [✓] {file_name} (ID: {sid})")
-                success_count += 1
-            except (
-                urllib.error.URLError,
-                json.JSONDecodeError,
-                UnicodeDecodeError,
-                OSError,
-            ) as e:
-                print(
-                    f"[{idx}/{total_tasks}] [x] ID {sid} 处理失败 ({type(e).__name__}): {e}"
-                )
+    for idx, sid in enumerate(story_ids, 1):
+        try:
+            file_name = fetch_and_export_story(sid, output_dir)
+            print(f"[{idx}/{total_tasks}] [✓] {file_name} (ID: {sid})")
+            success_count += 1
+        except (
+            urllib.error.URLError,
+            json.JSONDecodeError,
+            UnicodeDecodeError,
+            OSError,
+        ) as e:
+            print(
+                f"[{idx}/{total_tasks}] [x] ID {sid} 处理失败 ({type(e).__name__}): {e}"
+            )
 
     print(f"\n[🎉] 处理完毕！成功导出 {success_count}/{total_tasks} 个剧情剧本。")
-
-    total_tasks = sum(len(ids) for ids in stories.values())
-    print(f"\n匹配到待下载任务共 {total_tasks} 个:")
-    for group, ids in stories.items():
-        print(
-            f"  [{group}]: {len(ids)} 个任务 (ID: {ids[:3]}{'...' if len(ids) > 3 else ''})"
-        )
 
 
 if __name__ == "__main__":
