@@ -93,7 +93,7 @@ def main():
         output_dir.mkdir(parents=True, exist_ok=True)
 
         print(
-            f"\n[*] 在{story_type}中，共匹配到 {total_tasks} 个任务，准备启动多线程抓取并导出到 `{output_dir}/`..."
+            f"\n[*] 在{story_type}中，共匹配到 {total_tasks} 个任务，准备抓取并导出到 `{output_dir}/`..."
         )
 
         success_count = 0
