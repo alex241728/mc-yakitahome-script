@@ -42,14 +42,7 @@ def parse_args():
         "-o",
         type=str,
         default="output",
-        help="Markdown 文件输出目录 (默认: output)",
-    )
-    parser.add_argument(
-        "--workers",
-        "-w",
-        type=int,
-        default=8,
-        help="多线程下载并发数 (默认: 8)",
+        help="Markdown文件输出目录 (默认: output)",
     )
 
     return parser.parse_args()
@@ -87,38 +80,39 @@ def main():
 
     # 取得story IDs
     stories = get_story_ids(manifest_data, args)
-    story_ids = [sid for ids in stories.values() for sid in ids]
-    total_tasks = len(story_ids)
 
-    if total_tasks == 0:
-        print("\n[!] 未匹配到任何待下载的故事任务。")
-        return
+    for story_type in stories:
+        story_ids = stories.get(story_type)
+        total_tasks = len(story_ids)
 
-    output_dir = Path(args.output)
-    output_dir.mkdir(parents=True, exist_ok=True)
+        if total_tasks == 0:
+            print(f"\n[!] 在{story_type}中未匹配到任何待下载的故事任务。")
+            continue
 
-    print(
-        f"\n[*] 共匹配到 {total_tasks} 个任务，准备启动多线程抓取并导出到 `{output_dir}/`..."
-    )
+        output_dir = Path(args.output, story_type)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 多线程池并发执行
-    success_count = 0
-    for idx, sid in enumerate(story_ids, 1):
-        try:
-            file_name = fetch_and_export_story(sid, output_dir)
-            print(f"[{idx}/{total_tasks}] [✓] {file_name} (ID: {sid})")
-            success_count += 1
-        except (
-            urllib.error.URLError,
-            json.JSONDecodeError,
-            UnicodeDecodeError,
-            OSError,
-        ) as e:
-            print(
-                f"[{idx}/{total_tasks}] [x] ID {sid} 处理失败 ({type(e).__name__}): {e}"
-            )
+        print(
+            f"\n[*] 在{story_type}中，共匹配到 {total_tasks} 个任务，准备启动多线程抓取并导出到 `{output_dir}/`..."
+        )
 
-    print(f"\n[🎉] 处理完毕！成功导出 {success_count}/{total_tasks} 个剧情剧本。")
+        success_count = 0
+        for idx, sid in enumerate(story_ids, 1):
+            try:
+                file_name = fetch_and_export_story(sid, output_dir)
+                print(f"[{idx}/{total_tasks}] [✓] {file_name} (ID: {sid})")
+                success_count += 1
+            except (
+                urllib.error.URLError,
+                json.JSONDecodeError,
+                UnicodeDecodeError,
+                OSError,
+            ) as e:
+                print(
+                    f"[{idx}/{total_tasks}] [x] ID {sid} 处理失败 ({story_type(e).__name__}): {e}"
+                )
+
+        print(f"\n[🎉] 处理完毕！成功导出 {success_count}/{total_tasks} 个剧情剧本。")
 
 
 if __name__ == "__main__":
