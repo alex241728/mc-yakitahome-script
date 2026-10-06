@@ -74,6 +74,7 @@ def main():
     print(f"目标名称 (-n): {args.name}")
     print(f"目标分组 (-t): {args.type}")
     print(f"数量限制 (-l): {args.limit}")
+    print()
 
     # 取得manifest.json
     manifest_data = get_manifest("manifest.json", refresh=args.refresh)
@@ -112,7 +113,7 @@ def main():
                     f"[{idx}/{total_tasks}] [x] ID {sid} 处理失败 ({story_type(e).__name__}): {e}"
                 )
 
-        print(f"\n[🎉] 处理完毕！成功导出 {success_count}/{total_tasks} 个剧情剧本。")
+        print(f"[🎉] 处理完毕！成功导出 {success_count}/{total_tasks} 个剧情剧本。")
 
 
 if __name__ == "__main__":
